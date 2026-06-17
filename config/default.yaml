@@ -1,0 +1,169 @@
+# Model Configuration
+model:
+  d_model: 256
+  n_heads: 8
+  d_ffn: 1024
+  n_layers: 4
+  dropout: 0.1
+  activation: 'gelu'
+
+  # Positional Encoding (for ROI features)
+  # Options:
+  #   - 'sinusoidal': Standard Vaswani et al. sinusoidal
+  #   - 'learnable': Trainable embeddings
+  #   - 'brain_aware': Schaefer functional network encoding (RECOMMENDED)
+  #   - 'functional': Hierarchical network + hemisphere encoding
+  #   - 'anatomical': 3D MNI coordinate encoding (requires roi_coordinates)
+  #   - 'rotary': Rotary position embedding (RoPE)
+  #   - 'hybrid': Combination of brain_aware + anatomical + learnable
+  positional_encoding: 'brain_aware'
+
+  # Use Flash Attention (SDPA) for speedup on H100/A100
+  use_flash: true
+
+# Atlas Configuration
+# =============================================================================
+# Supported Atlas: Schaefer-{200, 400, 600}
+# =============================================================================
+atlas:
+  name: 'Schaefer'
+  n_rois: 200       # Options: 200, 400, 600
+  n_networks: 7     # Options: 7, 17
+  # MNI space resolution: '1mm' (91,109,91) or '2mm' (182,218,182)
+  # Voxel patch size will be scaled accordingly: 1mm→16³, 2mm→32³
+  space: 'MNI152_2mm'  # Options: 'MNI152_1mm' or 'MNI152_2mm'
+  #
+  # ===========================================================================
+  # Schaefer-400 Example (uncomment to use):
+  # ===========================================================================
+  # n_rois: 400       # 400 ROIs for fine-grained parcellation
+  #
+  # ===========================================================================
+  # Schaefer-600 Example (uncomment to use):
+  # ===========================================================================
+  # n_rois: 600       # 600 ROIs for ultra fine-grained parcellation
+
+# Data Configuration
+data:
+  data_root: 'data/'
+  train_split: 'train'
+  val_split: 'val'
+  test_split: 'test'
+  # Optional explicit directory overrides. When set, these paths are used
+  # instead of data_root/{metric,raw}/{split}.
+  train_dir: null
+  val_dir: null
+  test_dir: null
+  # H100 2048GB optimized batch size
+  # 模型大时梯度占用显著，建议从 64 开始尝试
+  batch_size: 64
+  batch_size: 64
+  num_workers: 8
+  prefetch_factor: 4
+  # 每个模态最大 patch 数 (显存友好)
+  max_patches_per_modality: 16
+  # Resolution-aware patch config
+  patch_config:
+    voxel_patch_size: 16      # 1mm MNI: 16³; 2mm MNI: 32² (auto-scaled)
+    voxel_patch_stride: 8     # 50% overlap
+    time_patch_length: 50
+    time_patch_stride: 25
+    fc_patch_size: 20
+    fc_patch_stride: 10
+  #
+  # ===========================================================================
+  # Schaefer-400 Data Config (uncomment to use):
+  # ===========================================================================
+  # batch_size: 32     # Smaller batch due to more ROIs
+  # max_patches_per_modality: 12
+
+# Training Configuration
+train:
+  epochs: 500
+  lr: 1e-4
+  weight_decay: 0.05
+  warmup_epochs: 10
+  clip_grad: 1.0
+
+  # Scheduler
+  scheduler: 'cosine'
+  min_lr: 1e-6
+
+  # EMA
+  ema_decay: 0.999
+  ema_start_epoch: 10
+
+# MAE Configuration
+mae:
+  mask_ratio: 0.75
+  decoder_hidden_dim: 512
+
+  # Loss weights
+  lambda_sMRI: 1.0
+  lambda_fMRI: 1.0
+  lambda_dMRI: 1.0
+  lambda_vicreg: 0.5
+
+# JEPA Configuration (optional)
+jepa:
+  # ===========================================================================
+  # Predictor Type Options:
+  #   - 'mlp': Lightweight MLP predictor
+  #   - 'transformer': Transformer-based predictor
+  #   - 'moe': Mixture-of-Experts predictor (recommended)
+  # ===========================================================================
+  predictor_type: 'mlp'
+  #
+  # ===========================================================================
+  # MoE Config Example (uncomment when predictor_type: 'moe'):
+  # ===========================================================================
+  # n_experts: 8        # Number of experts
+  # top_k: 2            # Top-k experts to use
+  # expert_hidden_dim: 1024
+
+  ema_beta: 0.99
+  predictor_n_heads: 4
+  predictor_n_layers: 2
+  lambda_vicreg: 0.5
+  #
+  # ===========================================================================
+  # Masking Strategy Options:
+  #   - 'intra': Intra-modality masking (preserve cross-modal)
+  #   - 'inter': Inter-modality masking (force cross-modal)
+  #   - 'both': Combine both strategies
+  # ===========================================================================
+  mask_type: 'intra'
+  intra_mask_ratio: 0.3
+  inter_mask_ratio: 0.2
+  mask_warmup: 0.0
+  mask_alignment: 0.15
+  mask_refinement: 0.30
+
+# DINO Configuration
+dino:
+  out_dim: 4096
+  hidden_dim: 2048
+  bottleneck_dim: 256
+  head_layers: 3
+  head_dropout: 0.0
+  teacher_momentum: 0.996
+  student_temp: 0.1
+  teacher_temp: 0.04
+  center_momentum: 0.9
+  n_student_views: 2
+  # Light tensor augmentations for MRI tensors. These preserve nested batch
+  # shape and are applied only to student views during training.
+  noise_std: 0.01
+  dropout_prob: 0.05
+
+# Distributed Training
+distributed:
+  backend: 'nccl'
+  init_method: 'env://'
+
+# Other
+seed: 42
+output_dir: 'outputs/'
+log_every: 100
+save_every: 10
+eval_every: 1

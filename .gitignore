@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Training artifacts
+outputs/
+runs/
+logs/
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+!data/Schaefer2018_*Parcels_*Networks_order_FSLMNI152_2mm.nii.gz
+
+# Data that should stay outside Git
+processed_data/
+raw_data/
+data/metric/
+data/raw/
+
+# Editors and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
