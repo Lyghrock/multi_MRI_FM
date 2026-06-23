@@ -82,44 +82,29 @@ atlas_path = download_schaefer_atlas(n_rois=400, n_networks=7, output_dir='./atl
 
 ```
 multi_MRI/
-├── model/                    # Foundation Model
-│   ├── backbone/            # Transformer components
-│   ├── encoders/            # Modality encoders
-│   ├── fusion/              # Fusion modules
-│   └── foundation_model.py   # Main model
-│
-├── data/                    # Data handling
-│   ├── atlas.py            # Schaefer atlas + FC computation (GPU)
-│   ├── brain_dataset.py     # Dataset classes
-│   ├── data_loader.py       # DataLoader (DDP)
-│   ├── preprocess.py        # Sequential preprocessing
-│   ├── preprocess_parallel.py # Parallel preprocessing (torchrun)
-│   ├── preprocess_sMRI.py   # sMRI preprocessing
-│   ├── preprocess_fMRI.py  # fMRI preprocessing
-│   └── preprocess_dMRI.py   # dMRI preprocessing
-│
-├── baseline/               # Training methods
-│   ├── MAE/              # MAE training
-│   │   ├── decoders/    # Modality-specific decoders
-│   │   ├── mae_model.py
-│   │   ├── mae_loss.py
-│   │   └── mae_trainer.py
-│   ├── JEPA/            # JEPA training
-│   │   ├── predictor/
-│   │   ├── target_encoder.py
-│   │   ├── jepa_model.py
-│   │   └── jepa_trainer.py
-│   └── DINO/            # DINO training
-│       ├── multi_crop.py
-│       ├── center.py
-│       ├── dino_model.py
-│       ├── dino_loss.py
-│       └── dino_trainer.py
-│
-├── utils/                   # Utilities
-├── config/                  # Configuration
-├── train.py                 # Training entry
-└── scripts/                 # Run scripts
+|-- model/                   # Foundation model
+|   |-- backbone/            # Transformer blocks + positional encoding
+|   |-- encoders/            # sMRI / fMRI / dMRI encoders
+|   |-- fusion/              # Latent hub fusion layers
+|   `-- foundation_model.py  # Main multi-modal encoder
+|
+|-- baseline/
+|   |-- MAE/                 # MAE wrappers, loss, decoders, trainer
+|   |-- JEPA/                # JEPA wrappers, masking, predictor, trainer
+|   `-- DINO/                # DINO wrappers, loss, trainer
+|
+|-- data/
+|   |-- atlas.py             # Schaefer atlas helpers
+|   |-- brain_dataset.py     # Dataset definitions
+|   |-- data_loader.py       # DataLoader utilities
+|   `-- preprocess.py        # Preprocessing entry point
+|
+|-- utils/                   # Config, checkpoint, logging, metrics, batching
+|-- config/
+|   `-- default.yaml         # Default training configuration
+|-- planning/                # Design notes and implementation plans
+|-- requirements.txt
+`-- train.py                 # Training entry point
 ```
 
 ## Installation
@@ -319,4 +304,5 @@ Input: sMRI + fMRI + dMRI
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+No `LICENSE` file is currently present in this repository. Add one before
+redistributing the code or claiming a specific open-source license.
